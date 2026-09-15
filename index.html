@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catastro Industrial — Panel de Ofertas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#EDE8DC;
+    --panel:#F8F5EC;
+    --panel-line:#CFC6AC;
+    --ink:#23262A;
+    --ink-soft:#61635F;
+    --ink-faint:#93917f;
+    --steel:#2F5D78;
+    --steel-dk:#1F4157;
+    --ochre:#A8631F;
+    --plum:#6B4A82;
+    --good:#4C7A5D;
+    --mid:#C99A3A;
+    --reg:#B5602E;
+    --bad:#9C3B33;
+    --line-grid: rgba(47,93,120,0.09);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--line-grid) 1px, transparent 1px) 0 0/100% 34px,
+      linear-gradient(90deg, var(--line-grid) 1px, transparent 1px) 0 0/34px 100%,
+      var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  ::selection{background:var(--steel); color:#fff;}
+
+  a{color:var(--steel-dk);}
+
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header.top{
+    border-bottom:1px solid var(--ink);
+    padding:28px clamp(20px,4vw,56px) 22px;
+    display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap;
+  }
+  header.top .id{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px; letter-spacing:.04em; color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  header.top h1{
+    font-family:'Fraunces',serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:clamp(28px,4vw,42px);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.top p.sub{
+    margin:8px 0 0; color:var(--ink-soft); max-width:52ch; font-size:14.5px;
+  }
+  .upload-box{
+    border:1px solid var(--ink);
+    background:var(--panel);
+    padding:14px 16px;
+    min-width:280px;
+    font-size:13px;
+  }
+  .upload-box .lbl{font-weight:600; margin-bottom:6px; display:block;}
+  .upload-row{display:flex; gap:8px; align-items:center;}
+  .upload-row input[type=file]{font-size:12px; max-width:170px;}
+  #resetBtn, #fileStatus button{
+    border:1px solid var(--ink); background:transparent; color:var(--ink);
+    padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit;
+  }
+  #resetBtn:hover{background:var(--ink); color:var(--paper);}
+  .file-note{color:var(--ink-faint); font-size:11.5px; margin-top:6px;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: 250px 1fr;
+    gap:0;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  nav.filters{
+    border-right:1px solid var(--ink);
+    padding:22px 20px 60px;
+    position:sticky; top:0;
+    max-height:100vh; overflow-y:auto;
+  }
+  @media (max-width: 880px){
+    nav.filters{position:static; max-height:none; border-right:none; border-bottom:1px solid var(--ink);}
+  }
+  nav.filters h2{
+    font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin:0 0 4px;
+  }
+  nav.filters > .hint{color:var(--ink-faint); font-size:12px; margin-bottom:18px;}
+  .fgroup{margin-bottom:22px;}
+  .fgroup .flabel{
+    font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-soft); font-weight:600; margin-bottom:8px;
+    border-bottom:1px solid var(--panel-line); padding-bottom:5px;
+  }
+  .chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip{
+    border:1px solid var(--ink-soft);
+    padding:5px 10px; font-size:12.5px; cursor:pointer; user-select:none;
+    background:transparent; color:var(--ink); transition:background .12s, color .12s, border-color .12s;
+  }
+  .chip.active{background:var(--steel); border-color:var(--steel); color:#fff;}
+  .chip .swatch{display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; vertical-align:middle;}
+  .toggle3{display:flex; gap:6px;}
+  .toggle3 .chip{flex:1; text-align:center;}
+  #resetAll{
+    width:100%; margin-top:6px;
+    border:1px solid var(--ink); background:var(--ink); color:var(--paper);
+    padding:9px; font-size:12.5px; cursor:pointer; font-family:inherit; letter-spacing:.02em;
+  }
+  #resetAll:hover{background:var(--steel-dk); border-color:var(--steel-dk);}
+
+  main{padding:26px clamp(18px,3.5vw,48px) 70px;}
+
+  section{margin-bottom:46px;}
+  section > .sec-head{
+    display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px;
+    border-bottom:1px solid var(--ink); padding-bottom:8px; margin-bottom:18px;
+  }
+  section > .sec-head h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:21px; margin:0;
+  }
+  section > .sec-head .sec-note{font-size:12.5px; color:var(--ink-faint);}
+
+  /* KPI strip */
+  .kpi-strip{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--ink); border-bottom:1px solid var(--ink);
+  }
+  @media (max-width:760px){ .kpi-strip{grid-template-columns:repeat(2,1fr);} }
+  .kpi{
+    padding:16px 16px 14px;
+    border-right:1px solid var(--panel-line);
+  }
+  .kpi:last-child{border-right:none;}
+  .kpi .k-label{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:6px;}
+  .kpi .k-value{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:600; color:var(--steel-dk);}
+  .kpi .k-unit{font-size:12px; color:var(--ink-faint); margin-left:2px;}
+
+  /* charts grid */
+  .chart-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:0;
+    border-top:1px solid var(--ink);
+  }
+  @media (max-width:880px){ .chart-grid{grid-template-columns:1fr;} }
+  .chart-card{
+    border-right:1px solid var(--panel-line); border-bottom:1px solid var(--panel-line);
+    padding:18px 20px 10px;
+    background:var(--panel);
+  }
+  .chart-grid .chart-card:nth-child(2n){border-right:none;}
+  .chart-card h3{font-size:14px; margin:0 0 3px; font-weight:600;}
+  .chart-card .desc{font-size:12px; color:var(--ink-faint); margin-bottom:10px;}
+  .chart-card canvas{max-height:260px;}
+  .chart-card.tall canvas{max-height:300px;}
+
+  /* pivot + stats tables */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  table caption{text-align:left; caption-side:top;}
+  thead th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--ink-soft); border-bottom:1px solid var(--ink); padding:8px 10px; font-weight:600;
+  }
+  tbody td{padding:8px 10px; border-bottom:1px solid var(--panel-line); font-family:'IBM Plex Mono',monospace; font-size:12.8px;}
+  tbody td.tlabel{font-family:'Inter',sans-serif; font-weight:500;}
+  tbody tr:hover{background:var(--panel);}
+  tfoot td{padding:8px 10px; font-weight:700; border-top:1px solid var(--ink); font-family:'IBM Plex Mono',monospace;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--panel-line);}
+  .table-wrap.plain{border:none;}
+
+  .stats-report{display:flex; flex-direction:column; gap:10px; margin-top:22px;}
+  .stat-item{border:1px solid var(--panel-line); padding:12px 16px; background:var(--panel);}
+  .stat-item summary{cursor:pointer; font-weight:600; font-size:13.5px; list-style:none; display:flex; justify-content:space-between; align-items:center;}
+  .stat-item summary::-webkit-details-marker{display:none;}
+  .stat-item summary .arrow{font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); transition:transform .15s;}
+  .stat-item[open] summary .arrow{transform:rotate(90deg);}
+  .stat-item p{margin:10px 0 0; font-size:13px; color:var(--ink-soft); max-width:80ch;}
+  .stat-mini{display:flex; gap:18px; flex-wrap:wrap; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px;}
+  .stat-mini span b{display:block; color:var(--ink-faint); font-family:'Inter',sans-serif; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; font-weight:600;}
+
+  #dataTableWrap{max-height:480px; overflow:auto; border:1px solid var(--ink);}
+  #dataTableWrap table{font-size:12px;}
+  #dataTableWrap thead th{position:sticky; top:0; background:var(--paper); cursor:pointer;}
+  #dataTableWrap thead th:hover{color:var(--steel-dk);}
+  .row-count{font-size:12px; color:var(--ink-faint); margin-bottom:8px;}
+
+  footer{
+    border-top:1px solid var(--ink); padding:20px clamp(20px,4vw,56px);
+    font-size:11.5px; color:var(--ink-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+
+  .empty-msg{padding:40px 20px; text-align:center; color:var(--ink-faint); font-size:13px; border:1px dashed var(--panel-line);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="id">EXPEDIENTE · OFERTAS DE SUELO INDUSTRIAL</div>
+    <h1>Catastro Industrial</h1>
+    <p class="sub">Panel de análisis para ofertas de terrenos y naves en zonas industriales I, II y III. Filtra por atributo y revisa el comportamiento del precio, la superficie y la condición de cada oferta.</p>
+  </div>
+  <div class="upload-box">
+    <span class="lbl">Cargar base de datos (.csv)</span>
+    <div class="upload-row">
+      <input type="file" id="csvInput" accept=".csv">
+      <button id="resetBtn" type="button">Usar datos originales</button>
+    </div>
+    <div class="file-note" id="fileNote">Cargado: muestra de 50 ofertas (Dashboard_2026).</div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="filters">
+    <h2>Segmentadores</h2>
+    <div class="hint">Selecciona uno o varios valores por atributo.</div>
+
+    <div class="fgroup">
+      <div class="flabel">Dirección / Zona</div>
+      <div class="chip-row" id="f-direccion"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">Estado Heideck</div>
+      <div class="chip-row" id="f-estado"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">En uso (ENUS)</div>
+      <div class="toggle3" id="f-enus"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">Equipos / Mobiliario</div>
+      <div class="toggle3" id="f-equip"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">Manzana (Mz)</div>
+      <div class="toggle3" id="f-mz"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">Localización (LOC)</div>
+      <div class="toggle3" id="f-loc"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">Ubicación 1</div>
+      <div class="toggle3" id="f-ubic1"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="flabel">Ubicación 2</div>
+      <div class="toggle3" id="f-ubic2"></div>
+    </div>
+
+    <button id="resetAll" type="button">Limpiar todos los filtros</button>
+  </nav>
+
+  <main>
+
+    <section id="kpiSection">
+      <div class="sec-head">
+        <h2>Resumen general</h2>
+        <span class="sec-note" id="kpiNote">50 de 50 ofertas seleccionadas</span>
+      </div>
+      <div class="kpi-strip" id="kpiStrip"></div>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <h2>Distribución y relaciones</h2>
+        <span class="sec-note">Se recalculan según los filtros activos</span>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Superficie construida (AC) vs. Precio de venta (PV)</h3>
+          <div class="desc">Cada punto es una oferta, coloreada por dirección. Útil para detectar valores atípicos.</div>
+          <canvas id="chartScatter"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Ofertas por estado Heideck</h3>
+          <div class="desc">Condición aparente reportada del inmueble.</div>
+          <canvas id="chartEstado"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Distribución del precio unitario (PU, $/m²)</h3>
+          <div class="desc">Histograma de precio unitario de construcción.</div>
+          <canvas id="chartPUHist"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Distribución de la edad aparente (años)</h3>
+          <div class="desc">Antigüedad estimada de las construcciones ofertadas.</div>
+          <canvas id="chartEdadHist"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Precio unitario promedio por zona</h3>
+          <div class="desc">Promedio de PU ($/m²) agrupado por dirección.</div>
+          <canvas id="chartPUZona"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Composición de atributos binarios</h3>
+          <div class="desc">Proporción "sí" sobre el total de la selección para cada atributo.</div>
+          <canvas id="chartBinarios"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <h2>Tabla resumen por dirección</h2>
+        <span class="sec-note">Sumatorias y promedios sobre la selección actual</span>
+      </div>
+      <div class="table-wrap">
+        <table id="pivotTable">
+          <thead>
+            <tr><th>Dirección</th><th>Ofertas</th><th>Suma AT (m²)</th><th>Suma AC (m²)</th><th>Suma PV ($)</th><th>Promedio PU ($/m²)</th></tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <h2>Estadística descriptiva</h2>
+        <span class="sec-note">Variables numéricas de la selección actual</span>
+      </div>
+      <div class="table-wrap plain">
+        <table id="statsTable">
+          <thead>
+            <tr>
+              <th>Variable</th><th>n</th><th>Media</th><th>Mediana</th><th>Desv. est.</th>
+              <th>Mín</th><th>Q1</th><th>Q3</th><th>Máx</th><th>CV %</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="stats-report" id="statsReport"></div>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <h2>Base de datos</h2>
+        <span class="sec-note">Vista completa de los registros filtrados — clic en un encabezado para ordenar</span>
+      </div>
+      <div class="row-count" id="rowCount"></div>
+      <div id="dataTableWrap">
+        <table id="dataTable">
+          <thead><tr id="dataTableHead"></tr></thead>
+          <tbody id="dataTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <span>Catastro Industrial — panel generado a partir de la base cargada. Los cálculos se actualizan en el navegador, sin enviar datos a ningún servidor.</span>
+  <span id="footStamp"></span>
+</footer>
+
+<script>
+const DEFAULT_CSV = "Dirección,PV,AT,AC,RAT/AC,Mz,EST,ED,FH,ENUS,LOC,+EQUIP,UBIC1,UBIC2,PU,Estado\r\nZona Industrial II,190000,893,893,1,0,8,13,0.0249,1,0,1,0,1,212.7659574468085,Bueno\r\nZona Industrial III,550000,2990,2990,1,1,10,43,0.0249,0,0,0,0,0,183.94648829431438,Bueno\r\nZona Industrial III,150000,762,762,1,1,5,10,0.0249,1,0,0,0,0,196.8503937007874,Bueno\r\nZona Industrial II,120000,400,400,1,1,1,5,0.0249,0,1,0,0,1,300,Bueno\r\nZona Industrial II,140000,630,630,1,1,4,30,0.1817,1,1,0,0,1,222.22222222222223,Regular\r\nZona Industrial II,150000,675,675,1,1,3,11,0.0249,0,1,0,0,1,222.22222222222223,Bueno\r\nZona Industrial II,960000,1965,1965,1,1,16,13,0.0249,1,1,0,0,1,488.5496183206107,Bueno\r\nZona Industrial II,250000,1800,1100,1.6363636363636365,0,1,5,0.3309,0,0,0,0,1,227.27272727272728,Deficiente\r\nZona Industrial I,220000,1000,1000,1,0,3,40,0.0809,0,1,0,1,0,220,Intermedio\r\nZona Industrial II,370000,1810,1125,1.6088888888888888,1,8,25,0.0809,1,1,0,0,1,328.8888888888889,Intermedio\r\nZona Industrial I,450000,2500,1500,1.6666666666666667,1,5,25,0.1817,1,0,0,1,0,300,Regular\r\nZona Industrial II,1686000,6580,3370,1.9525222551928783,1,5,25,0.0809,1,0,0,0,1,500.2967359050445,Intermedio\r\nZona Industrial II,220000,1005,1500,0.67,1,10,12,0.1817,0,0,0,0,1,146.66666666666666,Regular\r\nZona Industrial II,220000,455,455,1,0,4,13,0.0249,1,1,0,0,1,483.5164835164835,Bueno\r\nZona Industrial III,450000,1421,1421,1,1,6,12,0.0249,1,1,1,0,0,316.6783954961295,Bueno\r\nZona Industrial I,1200000,16519.4,3582,4.61178112786153,0,10,53,0.1817,0,0,0,1,0,335.00837520938023,Regular\r\nZona Industrial II,2000000,29800,6000,4.966666666666667,0,6,18,0.0809,0,0,0,0,1,333.3333333333333,Intermedio\r\nZona Industrial II,150000,675,675,1,1,3,11,0.0249,0,1,0,0,1,222.22222222222223,Bueno\r\nZona Industrial I,900000,2000,600,3.3333333333333335,0,8,10,0.1817,0,0,0,1,0,1500,Regular\r\nZona Industrial II,5134800,30000,26000,1.1538461538461537,1,150,5,0.0249,0,0,1,0,1,197.4923076923077,Bueno\r\nZona Industrial II,1800000,30000,5596,5.36097212294496,1,10,5,0.1817,1,0,1,0,1,321.6583273766976,Regular\r\nZona Industrial II,5900000,9706,9580,1.013152400835073,1,10,5,0.0249,1,0,0,0,1,615.866388308977,Bueno\r\nZona Industrial II,300000,1990,1900,1.0473684210526315,1,10,5,0.0249,1,1,1,0,1,157.89473684210526,Bueno\r\nZona Industrial II,200000,455,455,1,0,3,13,0.0249,0,1,0,0,1,439.56043956043953,Bueno\r\nZona Industrial II,200000,467,467,1,0,3,8,0.0249,1,1,0,0,1,428.2655246252677,Bueno\r\nZona Industrial II,5823200,11455,9164,1.25,1,5,5,0.0249,0,1,0,0,1,635.4430379746835,Bueno\r\nZona Industrial II,300000,2596,1486,1.746971736204576,0,2,5,0.0809,0,0,0,0,1,201.8842530282638,Intermedio\r\nZona Industrial III,220000,1056,1056,1,1,4,5,0.0249,0,1,0,0,0,208.33333333333334,Bueno\r\nZona Industrial III,440000,5000,3406,1.467997651203758,1,5,23,0.0809,1,0,0,0,0,129.18379330593072,Intermedio\r\nZona Industrial II,8326200,11769,11769,1,0,12,5,0.0249,1,1,0,0,1,707.4687738975274,Bueno\r\nZona Industrial II,450000,624,624,1,1,1,40,0.1817,1,1,0,0,1,721.1538461538462,Regular\r\nZona Industrial I,552000,1074,1074,1,1,10,7,0.0249,0,0,0,1,0,513.9664804469273,Bueno\r\nZona Industrial I,5000000,9562,5600,1.7075,1,10,20,0.0809,0,0,0,1,0,892.8571428571429,Intermedio\r\nZona Industrial I,340000,750,513,1.4619883040935673,1,2,1,0.0809,1,0,0,1,0,662.7680311890838,Intermedio\r\nZona Industrial III,2500000,5160,4150,1.2433734939759036,1,15,18,0.0249,1,1,1,0,0,602.4096385542168,Bueno\r\nZona Industrial III,380000,2379,2379,1,1,10,31,0.0809,1,0,0,0,0,159.73097940311055,Intermedio\r\nZona Industrial II,5000000,26139,11804,2.2144188410708234,1,29,10,0.0249,0,0,1,0,1,423.5852253473399,Bueno\r\nZona Industrial II,2700000,5000,1837,2.721829069134458,1,20,28,0.0249,1,0,1,0,1,1469.7876973326074,Bueno\r\nZona Industrial II,1000000,640,640,1,1,3,35,0.1817,1,1,1,0,1,1562.5,Regular\r\nZona Industrial II,240000,455,455,1,0,4,13,0.0249,1,1,0,0,1,527.4725274725274,Bueno\r\nZona Industrial III,1600000,10000,7400,1.3513513513513513,0,10,17,0.0809,0,0,0,0,0,216.21621621621622,Intermedio\r\nZona Industrial II,420000,928,928,1,1,2,13,0.0249,0,1,0,0,1,452.58620689655174,Bueno\r\nZona Industrial III,2500000,2760,2760,1,1,15,18,0.0809,1,1,1,0,0,905.7971014492754,Intermedio\r\nZona Industrial II,670000,3283.62,3283.62,1,1,8,10,0.0249,0,1,0,0,1,204.04309877513234,Bueno\r\nZona Industrial III,800000,3500,3000,1.1666666666666667,1,10,30,0.0809,1,0,0,0,0,266.6666666666667,Intermedio\r\nZona Industrial II,450000,1758,1421,1.2371569317382125,1,5,12,0.0249,1,0,0,0,1,316.6783954961295,Bueno\r\nZona Industrial II,495000,800,800,1,1,10,15,0.0809,0,1,0,0,1,618.75,Intermedio\r\nZona Industrial I,130000,717,450,1.5933333333333333,1,4,35,0.1817,1,0,0,1,0,288.8888888888889,Regular\r\nZona Industrial III,1200000,5000,5000,1,1,10,23,0.1817,0,0,0,0,0,240,Regular\r\nZona Industrial I,250000,1416,1416,1,0,5,20,0.1817,0,0,0,1,0,176.5536723163842,Regular\r\n";
+
+const NUMERIC_COLS = ["PV","AT","AC","RAT/AC","EST","ED","PU"];
+const VAR_DESCR = {
+  "PV":"Precio de venta ofertado, en pesos.",
+  "AT":"Área de terreno, en metros cuadrados.",
+  "AC":"Área de construcción, en metros cuadrados.",
+  "RAT/AC":"Relación entre área de terreno y área de construcción.",
+  "EST":"Índice registrado en el expediente (unidad interna del avalúo).",
+  "ED":"Edad aparente de la construcción, en años.",
+  "PU":"Precio unitario de construcción, en pesos por metro cuadrado."
+};
+const ZONE_COLORS = {"Zona Industrial I":"#2F5D78","Zona Industrial II":"#6B4A82","Zona Industrial III":"#A8631F"};
+const ESTADO_COLORS = {"Bueno":"#4C7A5D","Intermedio":"#C99A3A","Regular":"#B5602E","Deficiente":"#9C3B33"};
+const ESTADO_ORDER = ["Bueno","Intermedio","Regular","Deficiente"];
+
+let RAW = [];       // full parsed dataset
+let FILTERS = {};   // current filter state
+let charts = {};    // Chart.js instances
+let sortState = {col:null, dir:1};
+
+function parseCSVText(text){
+  const res = Papa.parse(text.trim(), {header:true, skipEmptyLines:true, dynamicTyping:true});
+  return res.data.map(r => {
+    const row = {};
+    Object.keys(r).forEach(k => row[k.trim()] = r[k]);
+    return row;
+  });
+}
+
+function initFiltersFromData(){
+  const dirs = [...new Set(RAW.map(r=>r["Dirección"]))].filter(Boolean).sort();
+  const estados = ESTADO_ORDER.filter(e => RAW.some(r=>r["Estado"]===e));
+  RAW.forEach(e=>{ if(!ESTADO_ORDER.includes(e["Estado"]) && e["Estado"]) estados.push(e["Estado"]); });
+
+  FILTERS = {
+    direccion: new Set(dirs),
+    estado: new Set(estados),
+    enus: "all", equip:"all", mz:"all", loc:"all", ubic1:"all", ubic2:"all"
+  };
+
+  buildChipGroup("f-direccion", dirs, "direccion", true, ZONE_COLORS);
+  buildChipGroup("f-estado", estados, "estado", true, ESTADO_COLORS);
+  buildToggle3("f-enus","enus");
+  buildToggle3("f-equip","equip");
+  buildToggle3("f-mz","mz");
+  buildToggle3("f-loc","loc");
+  buildToggle3("f-ubic1","ubic1");
+  buildToggle3("f-ubic2","ubic2");
+}
+
+function buildChipGroup(containerId, values, key, multi, colorMap){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  values.forEach(v=>{
+    const chip = document.createElement("button");
+    chip.type="button";
+    chip.className="chip active";
+    const dot = colorMap && colorMap[v] ? `<span class="swatch" style="background:${colorMap[v]}"></span>` : "";
+    chip.innerHTML = dot + v;
+    chip.addEventListener("click", ()=>{
+      if(FILTERS[key].has(v)){ FILTERS[key].delete(v); chip.classList.remove("active"); }
+      else { FILTERS[key].add(v); chip.classList.add("active"); }
+      render();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function buildToggle3(containerId, key){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  const opts = [["all","Todos"],["1","Sí"],["0","No"]];
+  opts.forEach(([val,label])=>{
+    const chip = document.createElement("button");
+    chip.type="button";
+    chip.className = "chip" + (val==="all" ? " active":"");
+    chip.textContent = label;
+    chip.addEventListener("click", ()=>{
+      FILTERS[key] = val;
+      [...el.children].forEach(c=>c.classList.remove("active"));
+      chip.classList.add("active");
+      render();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function fieldForKey(key){
+  return {enus:"ENUS", equip:"+EQUIP", mz:"Mz", loc:"LOC", ubic1:"UBIC1", ubic2:"UBIC2"}[key];
+}
+
+function getFiltered(){
+  return RAW.filter(r=>{
+    if(!FILTERS.direccion.has(r["Dirección"])) return false;
+    if(!FILTERS.estado.has(r["Estado"])) return false;
+    for(const key of ["enus","equip","mz","loc","ubic1","ubic2"]){
+      if(FILTERS[key] !== "all"){
+        const f = fieldForKey(key);
+        if(String(r[f]) !== FILTERS[key]) return false;
+      }
+    }
+    return true;
+  });
+}
+
+// ---------- stats helpers ----------
+function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function median(arr){
+  const s=[...arr].sort((a,b)=>a-b); const n=s.length;
+  return n%2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2;
+}
+function quantile(arr,q){
+  const s=[...arr].sort((a,b)=>a-b);
+  const pos=(s.length-1)*q, base=Math.floor(pos), rest=pos-base;
+  return s[base+1]!==undefined ? s[base]+rest*(s[base+1]-s[base]) : s[base];
+}
+function stdev(arr, m){
+  if(arr.length<2) return 0;
+  const mm = m ?? mean(arr);
+  return Math.sqrt(arr.reduce((a,b)=>a+(b-mm)**2,0)/(arr.length-1));
+}
+function fmtNum(n, dec=2){
+  if(n===undefined||n===null||isNaN(n)) return "—";
+  return n.toLocaleString("es-MX",{minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+function fmtInt(n){ return n.toLocaleString("es-MX"); }
+function fmtMoney(n){ return "$" + n.toLocaleString("es-MX",{maximumFractionDigits:0}); }
+
+// ---------- render ----------
+function render(){
+  const data = getFiltered();
+  document.getElementById("kpiNote").textContent = `${data.length} de ${RAW.length} ofertas seleccionadas`;
+  document.getElementById("footStamp").textContent = `Última actualización del panel: ${new Date().toLocaleString("es-MX")}`;
+
+  renderKPIs(data);
+  renderCharts(data);
+  renderPivot(data);
+  renderStatsTable(data);
+  renderStatsReport(data);
+  renderDataTable(data);
+}
+
+function renderKPIs(data){
+  const wrap = document.getElementById("kpiStrip");
+  if(data.length===0){
+    wrap.innerHTML = `<div class="empty-msg" style="grid-column:1/-1;">No hay ofertas que cumplan con los filtros seleccionados.</div>`;
+    return;
+  }
+  const pv = data.map(d=>d.PV), pu = data.map(d=>d.PU), ac = data.map(d=>d.AC), ed = data.map(d=>d.ED);
+  const kpis = [
+    ["Ofertas", fmtInt(data.length), ""],
+    ["Precio de venta promedio", fmtMoney(mean(pv)), ""],
+    ["Precio unitario promedio", fmtNum(mean(pu),0), "$/m²"],
+    ["Área construida promedio", fmtNum(mean(ac),0), "m²"],
+    ["Edad aparente promedio", fmtNum(mean(ed),1), "años"],
+  ];
+  wrap.innerHTML = kpis.map(([label,val,unit])=>`
+    <div class="kpi">
+      <div class="k-label">${label}</div>
+      <div class="k-value">${val}<span class="k-unit">${unit}</span></div>
+    </div>`).join("");
+}
+
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts(data){
+  renderScatter(data);
+  renderEstadoBar(data);
+  renderPUHist(data);
+  renderEdadHist(data);
+  renderPUZona(data);
+  renderBinarios(data);
+}
+
+const CHART_BASE_FONT = {family:"Inter", size:11};
+
+function renderScatter(data){
+  const ctx = document.getElementById("chartScatter");
+  destroyChart("scatter");
+  const dirs = [...FILTERS.direccion];
+  const datasets = dirs.map(dir=>({
+    label:dir,
+    data:data.filter(d=>d["Dirección"]===dir).map(d=>({x:d.AC,y:d.PV})),
+    backgroundColor: ZONE_COLORS[dir] || "#888",
+    pointRadius:5, pointHoverRadius:7
+  }));
+  charts.scatter = new Chart(ctx, {
+    type:"scatter",
+    data:{datasets},
+    options:{
+      responsive:true,
+      scales:{
+        x:{title:{display:true,text:"AC (m²)",font:CHART_BASE_FONT}, ticks:{font:CHART_BASE_FONT}},
+        y:{title:{display:true,text:"PV ($)",font:CHART_BASE_FONT}, ticks:{font:CHART_BASE_FONT, callback:v=>(v/1e6)+"M"}}
+      },
+      plugins:{legend:{position:"bottom", labels:{font:CHART_BASE_FONT, boxWidth:10}}}
+    }
+  });
+}
+
+function renderEstadoBar(data){
+  const ctx = document.getElementById("chartEstado");
+  destroyChart("estado");
+  const order = ESTADO_ORDER.filter(e=>FILTERS.estado.has(e));
+  const counts = order.map(e=>data.filter(d=>d.Estado===e).length);
+  charts.estado = new Chart(ctx, {
+    type:"bar",
+    data:{labels:order, datasets:[{data:counts, backgroundColor:order.map(e=>ESTADO_COLORS[e]||"#888")}]},
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.y} inmuebles`}}},
+      scales:{ y:{beginAtZero:true, ticks:{precision:0, font:CHART_BASE_FONT}}, x:{ticks:{font:CHART_BASE_FONT}} }
+    }
+  });
+}
+
+function histBuckets(values, nBuckets=8){
+  if(values.length===0) return {labels:[],counts:[]};
+  const min = Math.min(...values), max = Math.max(...values);
+  const width = (max-min)/nBuckets || 1;
+  const counts = new Array(nBuckets).fill(0);
+  values.forEach(v=>{
+    let idx = Math.floor((v-min)/width);
+    if(idx>=nBuckets) idx = nBuckets-1;
+    if(idx<0) idx = 0;
+    counts[idx]++;
+  });
+  const labels = counts.map((_,i)=>{
+    const lo = min+i*width, hi = min+(i+1)*width;
+    return `${Math.round(lo)}–${Math.round(hi)}`;
+  });
+  return {labels, counts};
+}
+
+function renderPUHist(data){
+  const ctx = document.getElementById("chartPUHist");
+  destroyChart("puhist");
+  const {labels,counts} = histBuckets(data.map(d=>d.PU), 8);
+  charts.puhist = new Chart(ctx, {
+    type:"bar",
+    data:{labels, datasets:[{data:counts, backgroundColor:"#2F5D78"}]},
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{ y:{beginAtZero:true, ticks:{precision:0, font:CHART_BASE_FONT}}, x:{ticks:{font:{...CHART_BASE_FONT,size:9}, maxRotation:60, minRotation:40}} }
+    }
+  });
+}
+
+function renderEdadHist(data){
+  const ctx = document.getElementById("chartEdadHist");
+  destroyChart("edadhist");
+  const {labels,counts} = histBuckets(data.map(d=>d.ED), 8);
+  charts.edadhist = new Chart(ctx, {
+    type:"bar",
+    data:{labels, datasets:[{data:counts, backgroundColor:"#A8631F"}]},
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{ y:{beginAtZero:true, ticks:{precision:0, font:CHART_BASE_FONT}}, x:{ticks:{font:{...CHART_BASE_FONT,size:9}, maxRotation:60, minRotation:40}} }
+    }
+  });
+}
+
+function renderPUZona(data){
+  const ctx = document.getElementById("chartPUZona");
+  destroyChart("puzona");
+  const dirs = [...FILTERS.direccion];
+  const avgs = dirs.map(dir=>{
+    const sub = data.filter(d=>d["Dirección"]===dir).map(d=>d.PU);
+    return sub.length ? mean(sub) : 0;
+  });
+  charts.puzona = new Chart(ctx, {
+    type:"bar",
+    data:{labels:dirs, datasets:[{data:avgs, backgroundColor:dirs.map(d=>ZONE_COLORS[d]||"#888")}]},
+    options:{
+      responsive:true, indexAxis:'y',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`$${Math.round(c.parsed.x)} /m²`}}},
+      scales:{ x:{beginAtZero:true, ticks:{font:CHART_BASE_FONT}}, y:{ticks:{font:CHART_BASE_FONT}} }
+    }
+  });
+}
+
+function renderBinarios(data){
+  const ctx = document.getElementById("chartBinarios");
+  destroyChart("binarios");
+  const n = data.length || 1;
+  const attrs = [
+    ["En uso","ENUS"], ["Equipos/Mob.","+EQUIP"], ["Manzana","Mz"],
+    ["Localización","LOC"], ["Ubicación 1","UBIC1"], ["Ubicación 2","UBIC2"]
+  ];
+  const pct = attrs.map(([label,f])=> data.length ? (data.filter(d=>String(d[f])==="1").length/n*100) : 0);
+  charts.binarios = new Chart(ctx, {
+    type:"bar",
+    data:{labels:attrs.map(a=>a[0]), datasets:[{data:pct, backgroundColor:"#6B4A82"}]},
+    options:{
+      responsive:true, indexAxis:'y',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.x.toFixed(0)}% de las ofertas`}}},
+      scales:{ x:{beginAtZero:true, max:100, ticks:{callback:v=>v+"%", font:CHART_BASE_FONT}}, y:{ticks:{font:CHART_BASE_FONT}} }
+    }
+  });
+}
+
+function renderPivot(data){
+  const dirs = [...FILTERS.direccion];
+  const tbody = document.querySelector("#pivotTable tbody");
+  const tfoot = document.querySelector("#pivotTable tfoot");
+  if(data.length===0){ tbody.innerHTML=""; tfoot.innerHTML=""; return; }
+  let totN=0,totAT=0,totAC=0,totPV=0;
+  const rows = dirs.map(dir=>{
+    const sub = data.filter(d=>d["Dirección"]===dir);
+    if(sub.length===0) return null;
+    const sAT = sub.reduce((a,b)=>a+b.AT,0);
+    const sAC = sub.reduce((a,b)=>a+b.AC,0);
+    const sPV = sub.reduce((a,b)=>a+b.PV,0);
+    const avgPU = mean(sub.map(d=>d.PU));
+    totN += sub.length; totAT+=sAT; totAC+=sAC; totPV+=sPV;
+    return `<tr><td class="tlabel">${dir}</td><td>${fmtInt(sub.length)}</td><td>${fmtNum(sAT,2)}</td><td>${fmtNum(sAC,2)}</td><td>${fmtNum(sPV,0)}</td><td>${fmtNum(avgPU,2)}</td></tr>`;
+  }).filter(Boolean);
+  tbody.innerHTML = rows.join("");
+  const totPU = mean(data.map(d=>d.PU));
+  tfoot.innerHTML = `<tr><td>Total</td><td>${fmtInt(totN)}</td><td>${fmtNum(totAT,2)}</td><td>${fmtNum(totAC,2)}</td><td>${fmtNum(totPV,0)}</td><td>${fmtNum(totPU,2)}</td></tr>`;
+}
+
+function renderStatsTable(data){
+  const tbody = document.querySelector("#statsTable tbody");
+  if(data.length===0){ tbody.innerHTML=""; return; }
+  const rows = NUMERIC_COLS.map(col=>{
+    const vals = data.map(d=>d[col]).filter(v=>typeof v === "number" && !isNaN(v));
+    if(vals.length===0) return "";
+    const m = mean(vals), sd = stdev(vals,m);
+    const cv = m!==0 ? (sd/m*100) : 0;
+    return `<tr>
+      <td class="tlabel">${col}</td>
+      <td>${vals.length}</td>
+      <td>${fmtNum(m,2)}</td>
+      <td>${fmtNum(median(vals),2)}</td>
+      <td>${fmtNum(sd,2)}</td>
+      <td>${fmtNum(Math.min(...vals),2)}</td>
+      <td>${fmtNum(quantile(vals,0.25),2)}</td>
+      <td>${fmtNum(quantile(vals,0.75),2)}</td>
+      <td>${fmtNum(Math.max(...vals),2)}</td>
+      <td>${fmtNum(cv,1)}</td>
+    </tr>`;
+  }).join("");
+  tbody.innerHTML = rows;
+}
+
+function renderStatsReport(data){
+  const wrap = document.getElementById("statsReport");
+  if(data.length===0){ wrap.innerHTML = `<div class="empty-msg">Ajusta los filtros para generar el reporte.</div>`; return; }
+
+  const blocks = NUMERIC_COLS.map(col=>{
+    const vals = data.map(d=>d[col]).filter(v=>typeof v === "number" && !isNaN(v));
+    if(vals.length===0) return "";
+    const m = mean(vals), md = median(vals), sd = stdev(vals,m);
+    const asim = m > md*1.05 ? "sesgo positivo (unas pocas ofertas altas elevan el promedio)"
+               : m < md*0.95 ? "sesgo negativo (unas pocas ofertas bajas reducen el promedio)"
+               : "distribución relativamente simétrica";
+    return `<details class="stat-item">
+      <summary>${col} <span class="arrow">›</span></summary>
+      <p>${VAR_DESCR[col]} Sobre las ${vals.length} ofertas seleccionadas, el valor promedio es <strong>${fmtNum(m,2)}</strong>
+      con una mediana de <strong>${fmtNum(md,2)}</strong> y una desviación estándar de <strong>${fmtNum(sd,2)}</strong>,
+      lo que sugiere ${asim}. Los valores van de <strong>${fmtNum(Math.min(...vals),2)}</strong> a
+      <strong>${fmtNum(Math.max(...vals),2)}</strong>.</p>
+      <div class="stat-mini">
+        <span><b>Q1</b>${fmtNum(quantile(vals,0.25),2)}</span>
+        <span><b>Q3</b>${fmtNum(quantile(vals,0.75),2)}</span>
+        <span><b>Rango</b>${fmtNum(Math.max(...vals)-Math.min(...vals),2)}</span>
+        <span><b>CV</b>${m!==0 ? fmtNum(sd/m*100,1):"—"}%</span>
+      </div>
+    </details>`;
+  }).join("");
+
+  // categorical block: Estado
+  const estadoCounts = ESTADO_ORDER.filter(e=>FILTERS.estado.has(e)).map(e=>[e,data.filter(d=>d.Estado===e).length]);
+  const modeEstado = estadoCounts.sort((a,b)=>b[1]-a[1])[0];
+  const estadoBlock = data.length ? `<details class="stat-item">
+    <summary>Estado Heideck (categórica) <span class="arrow">›</span></summary>
+    <p>Condición aparente reportada del inmueble. La categoría más frecuente en la selección es
+    <strong>${modeEstado ? modeEstado[0] : "—"}</strong> con ${modeEstado ? modeEstado[1] : 0} ofertas de ${data.length}
+    (${modeEstado ? fmtNum(modeEstado[1]/data.length*100,1) : 0}%).</p>
+    <div class="stat-mini">${estadoCounts.map(([e,c])=>`<span><b>${e}</b>${c} (${fmtNum(c/data.length*100,1)}%)</span>`).join("")}</div>
+  </details>` : "";
+
+  wrap.innerHTML = blocks + estadoBlock;
+}
+
+const DATA_TABLE_COLS = ["Dirección","PV","AT","AC","RAT/AC","Mz","EST","ED","ENUS","LOC","+EQUIP","UBIC1","UBIC2","PU","Estado"];
+
+function renderDataTable(data){
+  document.getElementById("rowCount").textContent = `${data.length} registros mostrados`;
+  const head = document.getElementById("dataTableHead");
+  head.innerHTML = DATA_TABLE_COLS.map(c=>`<th data-col="${c}">${c}${sortState.col===c ? (sortState.dir>0?" ↑":" ↓"):""}</th>`).join("");
+  [...head.children].forEach(th=>{
+    th.onclick = ()=>{
+      const col = th.dataset.col;
+      if(sortState.col===col) sortState.dir *= -1; else { sortState.col = col; sortState.dir = 1; }
+      renderDataTable(data);
+    };
+  });
+
+  let rows = [...data];
+  if(sortState.col){
+    rows.sort((a,b)=>{
+      const va=a[sortState.col], vb=b[sortState.col];
+      if(typeof va === "number" && typeof vb === "number") return (va-vb)*sortState.dir;
+      return String(va).localeCompare(String(vb)) * sortState.dir;
+    });
+  }
+
+  const body = document.getElementById("dataTableBody");
+  if(rows.length===0){
+    body.innerHTML = `<tr><td colspan="${DATA_TABLE_COLS.length}" class="empty-msg">Sin registros con los filtros actuales.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(r=>`<tr>${DATA_TABLE_COLS.map(c=>{
+    const v = r[c];
+    const val = typeof v === "number" ? fmtNum(v, Number.isInteger(v)?0:2) : v;
+    return `<td class="${c==='Dirección'||c==='Estado' ? 'tlabel':''}">${val ?? ""}</td>`;
+  }).join("")}</tr>`).join("");
+}
+
+// ---------- load / upload ----------
+function loadDataset(csvText, label){
+  RAW = parseCSVText(csvText).filter(r=>r["Dirección"]);
+  sortState = {col:null, dir:1};
+  initFiltersFromData();
+  document.getElementById("fileNote").textContent = label;
+  render();
+}
+
+document.getElementById("csvInput").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => loadDataset(ev.target.result, `Cargado: ${file.name} (${new Date().toLocaleTimeString("es-MX")})`);
+  reader.readAsText(file, "UTF-8");
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("csvInput").value = "";
+  loadDataset(DEFAULT_CSV, "Cargado: muestra de 50 ofertas (Dashboard_2026).");
+});
+
+document.getElementById("resetAll").addEventListener("click", ()=>{
+  initFiltersFromData();
+  render();
+});
+
+loadDataset(DEFAULT_CSV, "Cargado: muestra de 50 ofertas (Dashboard_2026).");
+</script>
+</body>
+</html>
