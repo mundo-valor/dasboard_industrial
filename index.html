@@ -270,12 +270,12 @@
     </div>
 
     <div class="fgroup">
-      <div class="flabel">Ubicación 1</div>
+      <div class="flabel">Ubicación (UBIC 1)</div>
       <div class="toggle3" id="f-ubic1"></div>
     </div>
 
     <div class="fgroup">
-      <div class="flabel">Ubicación 2</div>
+      <div class="flabel">Ubicación (UBIC 2)</div>
       <div class="toggle3" id="f-ubic2"></div>
     </div>
 
@@ -320,7 +320,7 @@
         </div>
         <div class="chart-card">
           <h3>Precio unitario promedio por zona</h3>
-          <div class="desc">Promedio de PU ($/m²) agrupado por dirección.</div>
+          <div class="desc">Promedio de PU ($/m²) agrupado por Zona Industrial.</div>
           <canvas id="chartPUZona"></canvas>
         </div>
         <div class="chart-card">
@@ -333,7 +333,7 @@
 
     <section>
       <div class="sec-head">
-        <h2>Tabla resumen por dirección</h2>
+        <h2>Tabla resumen por Zona Industrial</h2>
         <span class="sec-note">Sumatorias y promedios sobre la selección actual</span>
       </div>
       <div class="table-wrap">
@@ -394,13 +394,13 @@ const DEFAULT_CSV = "Dirección,PV,AT,AC,RAT/AC,Mz,EST,ED,FH,ENUS,LOC,+EQUIP,UBI
 
 const NUMERIC_COLS = ["PV","AT","AC","RAT/AC","EST","ED","PU"];
 const VAR_DESCR = {
-  "PV":"Precio de venta ofertado, en pesos.",
+  "PV":"Precio de venta ofertado, en dólares.",
   "AT":"Área de terreno, en metros cuadrados.",
   "AC":"Área de construcción, en metros cuadrados.",
   "RAT/AC":"Relación entre área de terreno y área de construcción.",
-  "EST":"Índice registrado en el expediente (unidad interna del avalúo).",
+  "EST":"Puestos de estacionamiento.",
   "ED":"Edad aparente de la construcción, en años.",
-  "PU":"Precio unitario de construcción, en pesos por metro cuadrado."
+  "PU":"Precio unitario de construcción, en dólares por metro cuadrado."
 };
 const ZONE_COLORS = {"Zona Industrial I":"#2F5D78","Zona Industrial II":"#6B4A82","Zona Industrial III":"#A8631F"};
 const ESTADO_COLORS = {"Bueno":"#4C7A5D","Intermedio":"#C99A3A","Regular":"#B5602E","Deficiente":"#9C3B33"};
