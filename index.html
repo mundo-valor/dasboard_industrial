@@ -299,7 +299,7 @@
       </div>
       <div class="chart-grid">
         <div class="chart-card">
-          <h3>Área construida (Ac) vs. Precio de venta (PV)</h3>
+          <h3>Área construida (AC) vs. Precio Total (PT)</h3>
           <div class="desc">Cada punto es una oferta, coloreada por dirección. Útil para detectar valores atípicos.</div>
           <canvas id="chartScatter"></canvas>
         </div>
@@ -309,7 +309,7 @@
           <canvas id="chartEstado"></canvas>
         </div>
         <div class="chart-card">
-          <h3>Distribución del precio unitario (PU, $/m²)</h3>
+          <h3>Distribución del precio unitario (PU, USD/m²)</h3>
           <div class="desc">Histograma de precio unitario de construcción.</div>
           <canvas id="chartPUHist"></canvas>
         </div>
@@ -320,7 +320,7 @@
         </div>
         <div class="chart-card">
           <h3>Precio unitario promedio por zona</h3>
-          <div class="desc">Promedio de PU ($/m²) agrupado por Zona Industrial.</div>
+          <div class="desc">Promedio de PU (USD/m²) agrupado por Zona Industrial.</div>
           <canvas id="chartPUZona"></canvas>
         </div>
         <div class="chart-card">
@@ -339,7 +339,7 @@
       <div class="table-wrap">
         <table id="pivotTable">
           <thead>
-            <tr><th>Dirección</th><th>Ofertas</th><th>Suma AT (m²)</th><th>Suma AC (m²)</th><th>Suma PV ($)</th><th>Promedio PU ($/m²)</th></tr>
+            <tr><th>Dirección</th><th>Ofertas</th><th>Suma AT (m²)</th><th>Suma AC (m²)</th><th>Suma PT (USD)</th><th>Promedio PU (USD/m²)</th></tr>
           </thead>
           <tbody></tbody>
           <tfoot></tfoot>
@@ -390,17 +390,17 @@
 </footer>
 
 <script>
-const DEFAULT_CSV = "Dirección,PV,AT,AC,RAT/AC,Mz,EST,ED,FH,ENUS,LOC,+EQUIP,UBIC1,UBIC2,PU,Estado\r\nZona Industrial II,190000,893,893,1,0,8,13,0.0249,1,0,1,0,1,212.7659574468085,Bueno\r\nZona Industrial III,550000,2990,2990,1,1,10,43,0.0249,0,0,0,0,0,183.94648829431438,Bueno\r\nZona Industrial III,150000,762,762,1,1,5,10,0.0249,1,0,0,0,0,196.8503937007874,Bueno\r\nZona Industrial II,120000,400,400,1,1,1,5,0.0249,0,1,0,0,1,300,Bueno\r\nZona Industrial II,140000,630,630,1,1,4,30,0.1817,1,1,0,0,1,222.22222222222223,Regular\r\nZona Industrial II,150000,675,675,1,1,3,11,0.0249,0,1,0,0,1,222.22222222222223,Bueno\r\nZona Industrial II,960000,1965,1965,1,1,16,13,0.0249,1,1,0,0,1,488.5496183206107,Bueno\r\nZona Industrial II,250000,1800,1100,1.6363636363636365,0,1,5,0.3309,0,0,0,0,1,227.27272727272728,Deficiente\r\nZona Industrial I,220000,1000,1000,1,0,3,40,0.0809,0,1,0,1,0,220,Intermedio\r\nZona Industrial II,370000,1810,1125,1.6088888888888888,1,8,25,0.0809,1,1,0,0,1,328.8888888888889,Intermedio\r\nZona Industrial I,450000,2500,1500,1.6666666666666667,1,5,25,0.1817,1,0,0,1,0,300,Regular\r\nZona Industrial II,1686000,6580,3370,1.9525222551928783,1,5,25,0.0809,1,0,0,0,1,500.2967359050445,Intermedio\r\nZona Industrial II,220000,1005,1500,0.67,1,10,12,0.1817,0,0,0,0,1,146.66666666666666,Regular\r\nZona Industrial II,220000,455,455,1,0,4,13,0.0249,1,1,0,0,1,483.5164835164835,Bueno\r\nZona Industrial III,450000,1421,1421,1,1,6,12,0.0249,1,1,1,0,0,316.6783954961295,Bueno\r\nZona Industrial I,1200000,16519.4,3582,4.61178112786153,0,10,53,0.1817,0,0,0,1,0,335.00837520938023,Regular\r\nZona Industrial II,2000000,29800,6000,4.966666666666667,0,6,18,0.0809,0,0,0,0,1,333.3333333333333,Intermedio\r\nZona Industrial II,150000,675,675,1,1,3,11,0.0249,0,1,0,0,1,222.22222222222223,Bueno\r\nZona Industrial I,900000,2000,600,3.3333333333333335,0,8,10,0.1817,0,0,0,1,0,1500,Regular\r\nZona Industrial II,5134800,30000,26000,1.1538461538461537,1,150,5,0.0249,0,0,1,0,1,197.4923076923077,Bueno\r\nZona Industrial II,1800000,30000,5596,5.36097212294496,1,10,5,0.1817,1,0,1,0,1,321.6583273766976,Regular\r\nZona Industrial II,5900000,9706,9580,1.013152400835073,1,10,5,0.0249,1,0,0,0,1,615.866388308977,Bueno\r\nZona Industrial II,300000,1990,1900,1.0473684210526315,1,10,5,0.0249,1,1,1,0,1,157.89473684210526,Bueno\r\nZona Industrial II,200000,455,455,1,0,3,13,0.0249,0,1,0,0,1,439.56043956043953,Bueno\r\nZona Industrial II,200000,467,467,1,0,3,8,0.0249,1,1,0,0,1,428.2655246252677,Bueno\r\nZona Industrial II,5823200,11455,9164,1.25,1,5,5,0.0249,0,1,0,0,1,635.4430379746835,Bueno\r\nZona Industrial II,300000,2596,1486,1.746971736204576,0,2,5,0.0809,0,0,0,0,1,201.8842530282638,Intermedio\r\nZona Industrial III,220000,1056,1056,1,1,4,5,0.0249,0,1,0,0,0,208.33333333333334,Bueno\r\nZona Industrial III,440000,5000,3406,1.467997651203758,1,5,23,0.0809,1,0,0,0,0,129.18379330593072,Intermedio\r\nZona Industrial II,8326200,11769,11769,1,0,12,5,0.0249,1,1,0,0,1,707.4687738975274,Bueno\r\nZona Industrial II,450000,624,624,1,1,1,40,0.1817,1,1,0,0,1,721.1538461538462,Regular\r\nZona Industrial I,552000,1074,1074,1,1,10,7,0.0249,0,0,0,1,0,513.9664804469273,Bueno\r\nZona Industrial I,5000000,9562,5600,1.7075,1,10,20,0.0809,0,0,0,1,0,892.8571428571429,Intermedio\r\nZona Industrial I,340000,750,513,1.4619883040935673,1,2,1,0.0809,1,0,0,1,0,662.7680311890838,Intermedio\r\nZona Industrial III,2500000,5160,4150,1.2433734939759036,1,15,18,0.0249,1,1,1,0,0,602.4096385542168,Bueno\r\nZona Industrial III,380000,2379,2379,1,1,10,31,0.0809,1,0,0,0,0,159.73097940311055,Intermedio\r\nZona Industrial II,5000000,26139,11804,2.2144188410708234,1,29,10,0.0249,0,0,1,0,1,423.5852253473399,Bueno\r\nZona Industrial II,2700000,5000,1837,2.721829069134458,1,20,28,0.0249,1,0,1,0,1,1469.7876973326074,Bueno\r\nZona Industrial II,1000000,640,640,1,1,3,35,0.1817,1,1,1,0,1,1562.5,Regular\r\nZona Industrial II,240000,455,455,1,0,4,13,0.0249,1,1,0,0,1,527.4725274725274,Bueno\r\nZona Industrial III,1600000,10000,7400,1.3513513513513513,0,10,17,0.0809,0,0,0,0,0,216.21621621621622,Intermedio\r\nZona Industrial II,420000,928,928,1,1,2,13,0.0249,0,1,0,0,1,452.58620689655174,Bueno\r\nZona Industrial III,2500000,2760,2760,1,1,15,18,0.0809,1,1,1,0,0,905.7971014492754,Intermedio\r\nZona Industrial II,670000,3283.62,3283.62,1,1,8,10,0.0249,0,1,0,0,1,204.04309877513234,Bueno\r\nZona Industrial III,800000,3500,3000,1.1666666666666667,1,10,30,0.0809,1,0,0,0,0,266.6666666666667,Intermedio\r\nZona Industrial II,450000,1758,1421,1.2371569317382125,1,5,12,0.0249,1,0,0,0,1,316.6783954961295,Bueno\r\nZona Industrial II,495000,800,800,1,1,10,15,0.0809,0,1,0,0,1,618.75,Intermedio\r\nZona Industrial I,130000,717,450,1.5933333333333333,1,4,35,0.1817,1,0,0,1,0,288.8888888888889,Regular\r\nZona Industrial III,1200000,5000,5000,1,1,10,23,0.1817,0,0,0,0,0,240,Regular\r\nZona Industrial I,250000,1416,1416,1,0,5,20,0.1817,0,0,0,1,0,176.5536723163842,Regular\r\n";
+const DEFAULT_CSV = "Dirección,PT,AT,AC,RAT/AC,Mz,EST,ED,FH,ENUS,LOC,+EQUIP,UBIC 1,UBIC 2,PU,Estado\r\nZona Industrial II,190000,893,893,1,0,8,13,0.0249,1,0,1,0,1,212.7659574468085,Bueno\r\nZona Industrial III,550000,2990,2990,1,1,10,43,0.0249,0,0,0,0,0,183.94648829431438,Bueno\r\nZona Industrial III,150000,762,762,1,1,5,10,0.0249,1,0,0,0,0,196.8503937007874,Bueno\r\nZona Industrial II,120000,400,400,1,1,1,5,0.0249,0,1,0,0,1,300,Bueno\r\nZona Industrial II,140000,630,630,1,1,4,30,0.1817,1,1,0,0,1,222.22222222222223,Regular\r\nZona Industrial II,150000,675,675,1,1,3,11,0.0249,0,1,0,0,1,222.22222222222223,Bueno\r\nZona Industrial II,960000,1965,1965,1,1,16,13,0.0249,1,1,0,0,1,488.5496183206107,Bueno\r\nZona Industrial II,250000,1800,1100,1.6363636363636365,0,1,5,0.3309,0,0,0,0,1,227.27272727272728,Deficiente\r\nZona Industrial I,220000,1000,1000,1,0,3,40,0.0809,0,1,0,1,0,220,Intermedio\r\nZona Industrial II,370000,1810,1125,1.6088888888888888,1,8,25,0.0809,1,1,0,0,1,328.8888888888889,Intermedio\r\nZona Industrial I,450000,2500,1500,1.6666666666666667,1,5,25,0.1817,1,0,0,1,0,300,Regular\r\nZona Industrial II,1686000,6580,3370,1.9525222551928783,1,5,25,0.0809,1,0,0,0,1,500.2967359050445,Intermedio\r\nZona Industrial II,220000,1005,1500,0.67,1,10,12,0.1817,0,0,0,0,1,146.66666666666666,Regular\r\nZona Industrial II,220000,455,455,1,0,4,13,0.0249,1,1,0,0,1,483.5164835164835,Bueno\r\nZona Industrial III,450000,1421,1421,1,1,6,12,0.0249,1,1,1,0,0,316.6783954961295,Bueno\r\nZona Industrial I,1200000,16519.4,3582,4.61178112786153,0,10,53,0.1817,0,0,0,1,0,335.00837520938023,Regular\r\nZona Industrial II,2000000,29800,6000,4.966666666666667,0,6,18,0.0809,0,0,0,0,1,333.3333333333333,Intermedio\r\nZona Industrial II,150000,675,675,1,1,3,11,0.0249,0,1,0,0,1,222.22222222222223,Bueno\r\nZona Industrial I,900000,2000,600,3.3333333333333335,0,8,10,0.1817,0,0,0,1,0,1500,Regular\r\nZona Industrial II,5134800,30000,26000,1.1538461538461537,1,150,5,0.0249,0,0,1,0,1,197.4923076923077,Bueno\r\nZona Industrial II,1800000,30000,5596,5.36097212294496,1,10,5,0.1817,1,0,1,0,1,321.6583273766976,Regular\r\nZona Industrial II,5900000,9706,9580,1.013152400835073,1,10,5,0.0249,1,0,0,0,1,615.866388308977,Bueno\r\nZona Industrial II,300000,1990,1900,1.0473684210526315,1,10,5,0.0249,1,1,1,0,1,157.89473684210526,Bueno\r\nZona Industrial II,200000,455,455,1,0,3,13,0.0249,0,1,0,0,1,439.56043956043953,Bueno\r\nZona Industrial II,200000,467,467,1,0,3,8,0.0249,1,1,0,0,1,428.2655246252677,Bueno\r\nZona Industrial II,5823200,11455,9164,1.25,1,5,5,0.0249,0,1,0,0,1,635.4430379746835,Bueno\r\nZona Industrial II,300000,2596,1486,1.746971736204576,0,2,5,0.0809,0,0,0,0,1,201.8842530282638,Intermedio\r\nZona Industrial III,220000,1056,1056,1,1,4,5,0.0249,0,1,0,0,0,208.33333333333334,Bueno\r\nZona Industrial III,440000,5000,3406,1.467997651203758,1,5,23,0.0809,1,0,0,0,0,129.18379330593072,Intermedio\r\nZona Industrial II,8326200,11769,11769,1,0,12,5,0.0249,1,1,0,0,1,707.4687738975274,Bueno\r\nZona Industrial II,450000,624,624,1,1,1,40,0.1817,1,1,0,0,1,721.1538461538462,Regular\r\nZona Industrial I,552000,1074,1074,1,1,10,7,0.0249,0,0,0,1,0,513.9664804469273,Bueno\r\nZona Industrial I,5000000,9562,5600,1.7075,1,10,20,0.0809,0,0,0,1,0,892.8571428571429,Intermedio\r\nZona Industrial I,340000,750,513,1.4619883040935673,1,2,1,0.0809,1,0,0,1,0,662.7680311890838,Intermedio\r\nZona Industrial III,2500000,5160,4150,1.2433734939759036,1,15,18,0.0249,1,1,1,0,0,602.4096385542168,Bueno\r\nZona Industrial III,380000,2379,2379,1,1,10,31,0.0809,1,0,0,0,0,159.73097940311055,Intermedio\r\nZona Industrial II,5000000,26139,11804,2.2144188410708234,1,29,10,0.0249,0,0,1,0,1,423.5852253473399,Bueno\r\nZona Industrial II,2700000,5000,1837,2.721829069134458,1,20,28,0.0249,1,0,1,0,1,1469.7876973326074,Bueno\r\nZona Industrial II,1000000,640,640,1,1,3,35,0.1817,1,1,1,0,1,1562.5,Regular\r\nZona Industrial II,240000,455,455,1,0,4,13,0.0249,1,1,0,0,1,527.4725274725274,Bueno\r\nZona Industrial III,1600000,10000,7400,1.3513513513513513,0,10,17,0.0809,0,0,0,0,0,216.21621621621622,Intermedio\r\nZona Industrial II,420000,928,928,1,1,2,13,0.0249,0,1,0,0,1,452.58620689655174,Bueno\r\nZona Industrial III,2500000,2760,2760,1,1,15,18,0.0809,1,1,1,0,0,905.7971014492754,Intermedio\r\nZona Industrial II,670000,3283.62,3283.62,1,1,8,10,0.0249,0,1,0,0,1,204.04309877513234,Bueno\r\nZona Industrial III,800000,3500,3000,1.1666666666666667,1,10,30,0.0809,1,0,0,0,0,266.6666666666667,Intermedio\r\nZona Industrial II,450000,1758,1421,1.2371569317382125,1,5,12,0.0249,1,0,0,0,1,316.6783954961295,Bueno\r\nZona Industrial II,495000,800,800,1,1,10,15,0.0809,0,1,0,0,1,618.75,Intermedio\r\nZona Industrial I,130000,717,450,1.5933333333333333,1,4,35,0.1817,1,0,0,1,0,288.8888888888889,Regular\r\nZona Industrial III,1200000,5000,5000,1,1,10,23,0.1817,0,0,0,0,0,240,Regular\r\nZona Industrial I,250000,1416,1416,1,0,5,20,0.1817,0,0,0,1,0,176.5536723163842,Regular\r\n";
 
-const NUMERIC_COLS = ["PV","AT","AC","RAT/AC","EST","ED","PU"];
+const NUMERIC_COLS = ["PT","AT","AC","RAT/AC","EST","ED","PU"];
 const VAR_DESCR = {
-  "PV":"Precio de venta ofertado, en dólares.",
+  "PT":"Precio Total de las ofertas publicadas, en USD.",
   "AT":"Área de terreno, en metros cuadrados.",
   "AC":"Área de construcción, en metros cuadrados.",
   "RAT/AC":"Relación entre área de terreno y área de construcción.",
   "EST":"Puestos de estacionamiento.",
   "ED":"Edad aparente de la construcción, en años.",
-  "PU":"Precio unitario de construcción, en dólares por metro cuadrado."
+  "PU":"Precio unitario de construcción, en USD por metro cuadrado."
 };
 const ZONE_COLORS = {"Zona Industrial I":"#2F5D78","Zona Industrial II":"#6B4A82","Zona Industrial III":"#A8631F"};
 const ESTADO_COLORS = {"Bueno":"#4C7A5D","Intermedio":"#C99A3A","Regular":"#B5602E","Deficiente":"#9C3B33"};
@@ -479,7 +479,7 @@ function buildToggle3(containerId, key){
 }
 
 function fieldForKey(key){
-  return {enus:"ENUS", equip:"+EQUIP", mz:"Mz", loc:"LOC", ubic1:"UBIC1", ubic2:"UBIC2"}[key];
+  return {enus:"ENUS", equip:"+EQUIP", mz:"Mz", loc:"LOC", ubic1:"UBIC 1", ubic2:"UBIC 2"}[key];
 }
 
 function getFiltered(){
@@ -512,18 +512,20 @@ function stdev(arr, m){
   const mm = m ?? mean(arr);
   return Math.sqrt(arr.reduce((a,b)=>a+(b-mm)**2,0)/(arr.length-1));
 }
+
+// Usamos el local 'es-ES' que formatea numéricamente con punto para miles y coma para decimales.
 function fmtNum(n, dec=2){
   if(n===undefined||n===null||isNaN(n)) return "—";
-  return n.toLocaleString("es-MX",{minimumFractionDigits:dec, maximumFractionDigits:dec});
+  return n.toLocaleString("es-ES",{minimumFractionDigits:dec, maximumFractionDigits:dec});
 }
-function fmtInt(n){ return n.toLocaleString("es-MX"); }
-function fmtMoney(n){ return "$" + n.toLocaleString("es-MX",{maximumFractionDigits:0}); }
+function fmtInt(n){ return n.toLocaleString("es-ES"); }
+function fmtMoney(n){ return n.toLocaleString("es-ES",{maximumFractionDigits:0}) + " USD"; }
 
 // ---------- render ----------
 function render(){
   const data = getFiltered();
   document.getElementById("kpiNote").textContent = `${data.length} de ${RAW.length} ofertas seleccionadas`;
-  document.getElementById("footStamp").textContent = `Última actualización del panel: ${new Date().toLocaleString("es-MX")}`;
+  document.getElementById("footStamp").textContent = `Última actualización del panel: ${new Date().toLocaleString("es-ES")}`;
 
   renderKPIs(data);
   renderCharts(data);
@@ -539,18 +541,18 @@ function renderKPIs(data){
     wrap.innerHTML = `<div class="empty-msg" style="grid-column:1/-1;">No hay ofertas que cumplan con los filtros seleccionados.</div>`;
     return;
   }
-  const pv = data.map(d=>d.PV), pu = data.map(d=>d.PU), ac = data.map(d=>d.AC), ed = data.map(d=>d.ED);
+  const pt = data.map(d=>d.PT), pu = data.map(d=>d.PU), ac = data.map(d=>d.AC), ed = data.map(d=>d.ED);
   const kpis = [
     ["Ofertas", fmtInt(data.length), ""],
-    ["Precio de venta promedio", fmtMoney(mean(pv)), ""],
-    ["Precio unitario promedio", fmtNum(mean(pu),0), "$/m²"],
+    ["Precio Total promedio", fmtMoney(mean(pt)), ""],
+    ["Precio unitario promedio", fmtNum(mean(pu),0), "USD/m²"],
     ["Área construida promedio", fmtNum(mean(ac),0), "m²"],
     ["Edad aparente promedio", fmtNum(mean(ed),1), "años"],
   ];
   wrap.innerHTML = kpis.map(([label,val,unit])=>`
     <div class="kpi">
       <div class="k-label">${label}</div>
-      <div class="k-value">${val}<span class="k-unit">${unit}</span></div>
+      <div class="k-value">${val} <span class="k-unit">${unit}</span></div>
     </div>`).join("");
 }
 
@@ -573,7 +575,7 @@ function renderScatter(data){
   const dirs = [...FILTERS.direccion];
   const datasets = dirs.map(dir=>({
     label:dir,
-    data:data.filter(d=>d["Dirección"]===dir).map(d=>({x:d.AC,y:d.PV})),
+    data:data.filter(d=>d["Dirección"]===dir).map(d=>({x:d.AC,y:d.PT})),
     backgroundColor: ZONE_COLORS[dir] || "#888",
     pointRadius:5, pointHoverRadius:7
   }));
@@ -584,7 +586,7 @@ function renderScatter(data){
       responsive:true,
       scales:{
         x:{title:{display:true,text:"AC (m²)",font:CHART_BASE_FONT}, ticks:{font:CHART_BASE_FONT}},
-        y:{title:{display:true,text:"PV ($)",font:CHART_BASE_FONT}, ticks:{font:CHART_BASE_FONT, callback:v=>(v/1e6)+"M"}}
+        y:{title:{display:true,text:"PT (USD)",font:CHART_BASE_FONT}, ticks:{font:CHART_BASE_FONT, callback:v=>(v/1e6).toLocaleString("es-ES")+"M"}}
       },
       plugins:{legend:{position:"bottom", labels:{font:CHART_BASE_FONT, boxWidth:10}}}
     }
@@ -668,7 +670,7 @@ function renderPUZona(data){
     data:{labels:dirs, datasets:[{data:avgs, backgroundColor:dirs.map(d=>ZONE_COLORS[d]||"#888")}]},
     options:{
       responsive:true, indexAxis:'y',
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`$${Math.round(c.parsed.x)} /m²`}}},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${fmtNum(c.parsed.x, 0)} USD/m²`}}},
       scales:{ x:{beginAtZero:true, ticks:{font:CHART_BASE_FONT}}, y:{ticks:{font:CHART_BASE_FONT}} }
     }
   });
@@ -680,7 +682,7 @@ function renderBinarios(data){
   const n = data.length || 1;
   const attrs = [
     ["En uso","ENUS"], ["Equipos/Mob.","+EQUIP"], ["Manzana","Mz"],
-    ["Localización","LOC"], ["Ubicación 1","UBIC1"], ["Ubicación 2","UBIC2"]
+    ["Localización","LOC"], ["Ubicación 1","UBIC 1"], ["Ubicación 2","UBIC 2"]
   ];
   const pct = attrs.map(([label,f])=> data.length ? (data.filter(d=>String(d[f])==="1").length/n*100) : 0);
   charts.binarios = new Chart(ctx, {
@@ -699,20 +701,20 @@ function renderPivot(data){
   const tbody = document.querySelector("#pivotTable tbody");
   const tfoot = document.querySelector("#pivotTable tfoot");
   if(data.length===0){ tbody.innerHTML=""; tfoot.innerHTML=""; return; }
-  let totN=0,totAT=0,totAC=0,totPV=0;
+  let totN=0,totAT=0,totAC=0,totPT=0;
   const rows = dirs.map(dir=>{
     const sub = data.filter(d=>d["Dirección"]===dir);
     if(sub.length===0) return null;
     const sAT = sub.reduce((a,b)=>a+b.AT,0);
     const sAC = sub.reduce((a,b)=>a+b.AC,0);
-    const sPV = sub.reduce((a,b)=>a+b.PV,0);
+    const sPT = sub.reduce((a,b)=>a+b.PT,0);
     const avgPU = mean(sub.map(d=>d.PU));
-    totN += sub.length; totAT+=sAT; totAC+=sAC; totPV+=sPV;
-    return `<tr><td class="tlabel">${dir}</td><td>${fmtInt(sub.length)}</td><td>${fmtNum(sAT,2)}</td><td>${fmtNum(sAC,2)}</td><td>${fmtNum(sPV,0)}</td><td>${fmtNum(avgPU,2)}</td></tr>`;
+    totN += sub.length; totAT+=sAT; totAC+=sAC; totPT+=sPT;
+    return `<tr><td class="tlabel">${dir}</td><td>${fmtInt(sub.length)}</td><td>${fmtNum(sAT,2)}</td><td>${fmtNum(sAC,2)}</td><td>${fmtNum(sPT,0)}</td><td>${fmtNum(avgPU,2)}</td></tr>`;
   }).filter(Boolean);
   tbody.innerHTML = rows.join("");
   const totPU = mean(data.map(d=>d.PU));
-  tfoot.innerHTML = `<tr><td>Total</td><td>${fmtInt(totN)}</td><td>${fmtNum(totAT,2)}</td><td>${fmtNum(totAC,2)}</td><td>${fmtNum(totPV,0)}</td><td>${fmtNum(totPU,2)}</td></tr>`;
+  tfoot.innerHTML = `<tr><td>Total</td><td>${fmtInt(totN)}</td><td>${fmtNum(totAT,2)}</td><td>${fmtNum(totAC,2)}</td><td>${fmtNum(totPT,0)}</td><td>${fmtNum(totPU,2)}</td></tr>`;
 }
 
 function renderStatsTable(data){
@@ -779,7 +781,7 @@ function renderStatsReport(data){
   wrap.innerHTML = blocks + estadoBlock;
 }
 
-const DATA_TABLE_COLS = ["Dirección","PV","AT","AC","RAT/AC","Mz","EST","ED","ENUS","LOC","+EQUIP","UBIC1","UBIC2","PU","Estado"];
+const DATA_TABLE_COLS = ["Dirección","PT","AT","AC","RAT/AC","Mz","EST","ED","ENUS","LOC","+EQUIP","UBIC 1","UBIC 2","PU","Estado"];
 
 function renderDataTable(data){
   document.getElementById("rowCount").textContent = `${data.length} registros mostrados`;
@@ -827,7 +829,7 @@ document.getElementById("csvInput").addEventListener("change", (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = ev => loadDataset(ev.target.result, `Cargado: ${file.name} (${new Date().toLocaleTimeString("es-MX")})`);
+  reader.onload = ev => loadDataset(ev.target.result, `Cargado: ${file.name} (${new Date().toLocaleTimeString("es-ES")})`);
   reader.readAsText(file, "UTF-8");
 });
 
